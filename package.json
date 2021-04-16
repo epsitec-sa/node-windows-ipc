@@ -8,6 +8,7 @@
   ],
   "devDependencies": {
     "mocha": "^2.3.3",
+    "napi-macros": "^2.0.0",
     "node-gyp": "^3.0.3"
   },
   "scripts": {
