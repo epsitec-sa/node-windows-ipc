@@ -1,19 +1,29 @@
 const sharedMemoryAddon = require("./build/Release/sharedMemory");
 
-function executeCommand(serviceName, cmd) {
-  const res = addon.execute_command(serviceName, cmd);
+function openSharedMemory(name, sharedMemoryAccess, memorySize) {
+  const handle = Buffer.alloc(sharedMemoryAddon.sizeof_SharedMemoryHandle);
 
-  if (res === -1) {
-    throw "could not open service manager";
-  } else if (res === -2) {
-    throw `could not connect to service ${serviceName}`;
-  } else if (res === -3) {
-    throw `sending command ${cmd} to service ${serviceName} failed`;
-  } else if (res > 0) {
-    throw `sending command ${cmd} to service ${serviceName} failed with error code ${res}`;
+  const res = sharedMemoryAddon.OpenSharedMemory(
+    name,
+    sharedMemoryAccess,
+    memorySize,
+    handle
+  );
+
+  if (res > 0) {
+    throw `could not open file mapping for object ${name}: ${res}`;
+  } else if (res < 0) {
+    throw `could not map view of file ${name}: ${res}`;
   }
+
+  return handle;
 }
 
-module.exports.sharedMemory = {
-  executeCommand,
+module.exports = {
+  openSharedMemory,
+  sharedMemoryAccess: {
+    Read: 0x0004,
+    Write: 0x0002,
+    ReadWrite: 0x0004 | 0x0002,
+  },
 };
