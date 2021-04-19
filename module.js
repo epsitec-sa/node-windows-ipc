@@ -63,12 +63,17 @@ function writeSharedData(handle, data) {
   }
 }
 
-function readSharedData(handle, memorySize) {
-  const res = sharedMemoryAddon.ReadSharedData(handle, data);
+function readSharedData(handle, bufferSize) {
+  const dataSize = bufferSize || sharedMemoryAddon.GetSharedMemorySize(handle);
+  const buf = Buffer.alloc(dataSize);
+
+  const res = sharedMemoryAddon.ReadSharedData(handle, buf, dataSize);
 
   if (res === 1) {
     throw `data size (${data.length()}) exceeded maximum shared memory size`;
   }
+
+  return buf;
 }
 
 function closeSharedMemory(handle) {

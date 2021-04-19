@@ -56,3 +56,30 @@ describe("WriteSharedMemory", function () {
     lib.closeSharedMemory(handle);
   });
 });
+
+describe("ReadSharedMemory", function () {
+  it("should create, open, write and read from shared memory", function () {
+    const cHandle = lib.createSharedMemory(
+      "Local\\CresusUpdaterServiceStateSharedMemory",
+      lib.sharedMemoryPageAccess.ReadWrite,
+      lib.sharedMemoryFileMapAccess.AllAccess,
+      4096
+    );
+    const oHandle = lib.openSharedMemory(
+      "Local\\CresusUpdaterServiceStateSharedMemory",
+      lib.sharedMemoryFileMapAccess.AllAccess,
+      4096
+    );
+
+    assert.ok(cHandle);
+    assert.ok(oHandle);
+
+    lib.writeSharedData(cHandle, "hello world!!");
+    const buf = lib.readSharedData(oHandle, 4096);
+
+    assert.deepStrictEqual("hello world!!", buf.toString("utf8"));
+
+    lib.closeSharedMemory(oHandle);
+    lib.closeSharedMemory(cHandle);
+  });
+});

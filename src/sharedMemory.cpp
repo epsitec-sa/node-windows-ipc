@@ -136,6 +136,20 @@ NAPI_METHOD(CloseSharedMemory)
   NAPI_RETURN_INT32(result)
 }
 
+// SharedMemoryHandle* memoryHandle -> int
+NAPI_METHOD(GetSharedMemorySize)
+{
+  int result = 0;
+
+  NAPI_ARGV(1)
+
+  NAPI_ARGV_BUFFER_CAST(struct SharedMemoryHandle *, memoryHandle, 0)
+
+  result = memoryHandle->size;
+
+  NAPI_RETURN_INT32(result)
+}
+
 NAPI_INIT()
 {
   NAPI_EXPORT_FUNCTION(CreateSharedMemory)
@@ -143,6 +157,7 @@ NAPI_INIT()
   NAPI_EXPORT_FUNCTION(WriteSharedData)
   NAPI_EXPORT_FUNCTION(ReadSharedData)
   NAPI_EXPORT_FUNCTION(CloseSharedMemory)
+  NAPI_EXPORT_FUNCTION(GetSharedMemorySize)
 
   NAPI_EXPORT_SIZEOF_STRUCT(SharedMemoryHandle)
   NAPI_EXPORT_ALIGNMENTOF(SharedMemoryHandle)
