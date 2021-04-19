@@ -75,9 +75,9 @@ describe("ReadSharedMemory", function () {
     assert.ok(oHandle);
 
     lib.writeSharedData(cHandle, "hello world!!");
-    const buf = lib.readSharedData(oHandle, 4096);
+    const text = lib.readSharedData(oHandle, "utf8");
 
-    assert.deepStrictEqual("hello world!!", buf.toString("utf8"));
+    assert.strictEqual("hello world!!", text);
 
     lib.closeSharedMemory(oHandle);
     lib.closeSharedMemory(cHandle);

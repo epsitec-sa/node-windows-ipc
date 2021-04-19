@@ -1,8 +1,10 @@
 const sharedMemoryAddon = require("./build/Release/sharedMemory");
 
-function isArrayBuffer(value) {
+function isBuffer(value) {
   return (
-    value && value.buffer instanceof Buffer && value.byteLength !== undefined
+    value &&
+    value.buffer instanceof ArrayBuffer &&
+    value.byteLength !== undefined
   );
 }
 
@@ -45,13 +47,13 @@ function openSharedMemory(name, fileMapAccess, memorySize) {
   return handle;
 }
 
-function writeSharedData(handle, data) {
+function writeSharedData(handle, data, encoding) {
   let buf = null;
 
-  if (isArrayBuffer(data)) {
+  if (isBuffer(data)) {
     buf = data;
   } else if (data && typeof data === "string") {
-    buf = Buffer.from(data, "utf8");
+    buf = Buffer.from(data, encoding || "utf8");
   } else {
     buf = Buffer.from(data);
   }
@@ -63,7 +65,7 @@ function writeSharedData(handle, data) {
   }
 }
 
-function readSharedData(handle, bufferSize) {
+function readSharedData(handle, encoding, bufferSize) {
   const dataSize = bufferSize || sharedMemoryAddon.GetSharedMemorySize(handle);
   const buf = Buffer.alloc(dataSize);
 
@@ -71,6 +73,11 @@ function readSharedData(handle, bufferSize) {
 
   if (res === 1) {
     throw `data size (${data.length()}) exceeded maximum shared memory size`;
+  }
+
+  if (encoding) {
+    // is a string
+    return buf.toString(encoding).replace(/\0/g, ""); // remove trailing \0 characters
   }
 
   return buf;
