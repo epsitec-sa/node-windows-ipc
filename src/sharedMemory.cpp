@@ -4,7 +4,7 @@
 #include <windows.h>
 #include <string>
 
-struct SharedMemory
+struct SharedMemoryHandle
 {
   HANDLE hMapFile;
   LPCTSTR pBuf;
@@ -22,12 +22,12 @@ NAPI_METHOD(OpenSharedMemory)
   NAPI_ARGV_UTF8(objectNameA, 1000, 0)
   NAPI_ARGV_INT32(sharedMemoryAccess, 1)
   NAPI_ARGV_INT32(memorySize, 2)
-  NAPI_ARGV_BUFFER_CAST(struct SharedMemory *, memoryHandle, 3)
+  NAPI_ARGV_BUFFER_CAST(struct SharedMemoryHandle *, memoryHandle, 3)
 
   memoryHandle->hMapFile = OpenFileMapping(sharedMemoryAccess, FALSE, objectNameA);
   if (memoryHandle->hMapFile == NULL)
   {
-    result = 1;
+    result = GetLastError();
     NAPI_RETURN_INT32(result)
   }
 
@@ -36,7 +36,7 @@ NAPI_METHOD(OpenSharedMemory)
   {
     CloseHandle(memoryHandle->hMapFile);
 
-    result = 2;
+    result = -1 * GetLastError();
     NAPI_RETURN_INT32(result);
   }
 
@@ -46,5 +46,6 @@ NAPI_METHOD(OpenSharedMemory)
 NAPI_INIT()
 {
   NAPI_EXPORT_FUNCTION(OpenSharedMemory)
-  NAPI_EXPORT_SIZEOF_STRUCT(SharedMemory)
+  NAPI_EXPORT_SIZEOF_STRUCT(SharedMemoryHandle)
+  NAPI_EXPORT_ALIGNMENTOF(SharedMemoryHandle)
 }
