@@ -1,5 +1,11 @@
 const sharedMemoryAddon = require("./build/Release/sharedMemory");
 
+function isArrayBuffer(value) {
+  return (
+    value && value.buffer instanceof Buffer && value.byteLength !== undefined
+  );
+}
+
 function createSharedMemory(name, pageAccess, fileMapAccess, memorySize) {
   const handle = Buffer.alloc(sharedMemoryAddon.sizeof_SharedMemoryHandle);
 
@@ -39,9 +45,42 @@ function openSharedMemory(name, fileMapAccess, memorySize) {
   return handle;
 }
 
+function writeSharedData(handle, data) {
+  let buf = null;
+
+  if (isArrayBuffer(data)) {
+    buf = data;
+  } else if (data && typeof data === "string") {
+    buf = Buffer.from(data, "utf8");
+  } else {
+    buf = Buffer.from(data);
+  }
+
+  const res = sharedMemoryAddon.WriteSharedData(handle, buf, buf.byteLength);
+
+  if (res === 1) {
+    throw `data size (${data.length()}) exceeded maximum shared memory size`;
+  }
+}
+
+function readSharedData(handle, memorySize) {
+  const res = sharedMemoryAddon.ReadSharedData(handle, data);
+
+  if (res === 1) {
+    throw `data size (${data.length()}) exceeded maximum shared memory size`;
+  }
+}
+
+function closeSharedMemory(handle) {
+  sharedMemoryAddon.CloseSharedMemory(handle);
+}
+
 module.exports = {
   createSharedMemory,
   openSharedMemory,
+  writeSharedData,
+  readSharedData,
+  closeSharedMemory,
 
   sharedMemoryPageAccess: {
     ReadOnly: 0x02,
