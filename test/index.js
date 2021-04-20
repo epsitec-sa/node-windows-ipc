@@ -21,13 +21,13 @@ describe("CreateSharedMemory", function () {
 describe("OpenSharedMemory", function () {
   it("should create and open shared memory", function () {
     const cHandle = lib.createSharedMemory(
-      "Local\\CresusUpdaterServiceStateSharedMemory",
+      "Local\\TestSharedMemory",
       lib.sharedMemoryPageAccess.ReadWrite,
       lib.sharedMemoryFileMapAccess.AllAccess,
       4096
     );
     const oHandle = lib.openSharedMemory(
-      "Local\\CresusUpdaterServiceStateSharedMemory",
+      "Local\\TestSharedMemory",
       lib.sharedMemoryFileMapAccess.AllAccess,
       4096
     );
@@ -43,7 +43,7 @@ describe("OpenSharedMemory", function () {
 describe("WriteSharedMemory", function () {
   it("should create and write into shared memory", function () {
     const handle = lib.createSharedMemory(
-      "Local\\CresusUpdaterServiceStateSharedMemory",
+      "Local\\TestSharedMemory",
       lib.sharedMemoryPageAccess.ReadWrite,
       lib.sharedMemoryFileMapAccess.AllAccess,
       4096
@@ -60,13 +60,13 @@ describe("WriteSharedMemory", function () {
 describe("ReadSharedMemory", function () {
   it("should create, open, write and read from shared memory", function () {
     const cHandle = lib.createSharedMemory(
-      "Local\\CresusUpdaterServiceStateSharedMemory",
+      "Local\\TestSharedMemory",
       lib.sharedMemoryPageAccess.ReadWrite,
       lib.sharedMemoryFileMapAccess.AllAccess,
       4096
     );
     const oHandle = lib.openSharedMemory(
-      "Local\\CresusUpdaterServiceStateSharedMemory",
+      "Local\\TestSharedMemory",
       lib.sharedMemoryFileMapAccess.AllAccess,
       4096
     );
