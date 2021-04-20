@@ -2,6 +2,7 @@
 #include <napi-macros.h>
 
 #include <windows.h>
+#include <sddl.h>
 #include <string>
 
 struct SharedMemoryHandle
@@ -11,20 +12,35 @@ struct SharedMemoryHandle
   int size;
 };
 
-// string name, int pageAccess, int fileMapAccess, int memSize, SharedMemoryHandle* memoryHandle -> int
+// string name, int pageAccess, int fileMapAccess, int memSize, string sddl, SharedMemoryHandle* memoryHandle -> int
 NAPI_METHOD(CreateSharedMemory)
 {
   int result = 0;
 
-  NAPI_ARGV(5)
+  NAPI_ARGV(6)
 
   NAPI_ARGV_UTF8(objectNameA, 1000, 0)
   NAPI_ARGV_INT32(sharedMemoryPageAccess, 1)
   NAPI_ARGV_INT32(sharedMemoryFileMapAccess, 2)
   NAPI_ARGV_INT32(memorySize, 3)
-  NAPI_ARGV_BUFFER_CAST(struct SharedMemoryHandle *, memoryHandle, 4)
+  NAPI_ARGV_UTF8(sddlStringA, 1000, 4)
+  NAPI_ARGV_BUFFER_CAST(struct SharedMemoryHandle *, memoryHandle, 5)
 
-  memoryHandle->hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, sharedMemoryPageAccess, 0, memorySize, objectNameA);
+  LPSECURITY_ATTRIBUTES pAttributes = NULL;
+  SECURITY_ATTRIBUTES attributes;
+
+  if (strcmp(sddlStringA, "") != 0)
+  {
+    ZeroMemory(&attributes, sizeof(attributes));
+    attributes.nLength = sizeof(attributes);
+    ConvertStringSecurityDescriptorToSecurityDescriptor(
+      sddlStringA,
+      SDDL_REVISION_1,
+      &attributes.lpSecurityDescriptor,
+      NULL);
+  }
+
+  memoryHandle->hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, pAttributes, sharedMemoryPageAccess, 0, memorySize, objectNameA);
   if (memoryHandle->hMapFile == NULL)
   {
     result = GetLastError();

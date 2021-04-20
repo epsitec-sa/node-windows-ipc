@@ -8,7 +8,13 @@ function isBuffer(value) {
   );
 }
 
-function createSharedMemory(name, pageAccess, fileMapAccess, memorySize) {
+function createSharedMemory(
+  name,
+  pageAccess,
+  fileMapAccess,
+  memorySize,
+  sddlString
+) {
   const handle = Buffer.alloc(sharedMemoryAddon.sizeof_SharedMemoryHandle);
 
   const res = sharedMemoryAddon.CreateSharedMemory(
@@ -16,6 +22,7 @@ function createSharedMemory(name, pageAccess, fileMapAccess, memorySize) {
     pageAccess,
     fileMapAccess,
     memorySize,
+    sddlString || "",
     handle
   );
 
