@@ -6,7 +6,7 @@ var lib = require("../");
 describe("CreateSharedMemory", function () {
   it("should create shared memory", function () {
     const handle = lib.createSharedMemory(
-      "Local\\CresusUpdaterServiceStateSharedMemory",
+      "Local\\TestSharedMemory",
       lib.sharedMemoryPageAccess.ReadWrite,
       lib.sharedMemoryFileMapAccess.AllAccess,
       4096
