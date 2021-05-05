@@ -1,7 +1,8 @@
 /*global describe,it*/
 
-var assert = require("assert");
-var lib = require("../");
+const assert = require("assert");
+const lib = require("../");
+const synchronize = require("node-windows-synchronize");
 
 describe("CreateSharedMemory", function () {
   it("should create shared memory", function () {
@@ -81,5 +82,34 @@ describe("ReadSharedMemory", function () {
 
     lib.closeSharedMemory(oHandle);
     lib.closeSharedMemory(cHandle);
+  });
+});
+
+describe("WriteSharedMemorySerial", function () {
+  it("should create and write in a serial way to shared memory", function () {
+    const smHandle = lib.createSharedMemory(
+      "Local\\TestSharedMemory",
+      lib.sharedMemoryPageAccess.ReadWrite,
+      lib.sharedMemoryFileMapAccess.AllAccess,
+      4096
+    );
+    const mHandle = synchronize.createMutex("Local\\TestMutex");
+
+    assert.ok(smHandle);
+    assert.ok(mHandle);
+
+    for (let i = 0; i < 100000; i++) {
+      synchronize.waitMutex(mHandle, synchronize.waitTime.Infinite);
+
+      lib.writeSharedData(smHandle, "hello world: " + i);
+
+      synchronize.releaseMutex(mHandle);
+    }
+
+    const text = lib.readSharedData(smHandle, "utf8");
+    assert.strictEqual("hello world: 99999", text);
+
+    synchronize.closeMutex(mHandle);
+    lib.closeSharedMemory(smHandle);
   });
 });
