@@ -113,3 +113,22 @@ describe("WriteSharedMemorySerial", function () {
     lib.closeSharedMemory(smHandle);
   });
 });
+
+describe("SendCopyDataMessageTimeout", function () {
+  it("should send a WM_COPYDATA message", function () {
+    const targetHandle = lib.stringToHwnd("0xF060A");
+    const senderHandle = lib.stringToHwnd("0x0");
+
+    assert.ok(targetHandle);
+    assert.ok(senderHandle);
+
+    lib.sendCopyDataMessageTimeout(
+      targetHandle,
+      senderHandle,
+      "hello world",
+      "utf8",
+      null,
+      5000
+    );
+  });
+});

@@ -1,4 +1,5 @@
 const sharedMemoryAddon = require("./build/Release/sharedMemory");
+const messagingAddon = require("./build/Release/messaging");
 
 function isBuffer(value) {
   return (
@@ -8,6 +9,15 @@ function isBuffer(value) {
   );
 }
 
+const sendMessageTimeoutFlags = {
+  SMTO_NORMAL: 0x00,
+  SMTO_BLOCK: 0x01,
+  SMTO_ABORTIFHUNG: 0x02,
+  SMTO_NOTIMEOUTIFNOTHUNG: 0x08,
+  SMTO_ERRORONEXIT: 0x20, // WARNING: this flag is only available on Windows Vista and higher. If you use it on Windows XP SP3 or older, SendMessageTimeout will return ERROR_INVALID_PARAMETER.
+};
+
+// shared memory
 function createSharedMemory(
   name,
   pageAccess,
@@ -94,6 +104,56 @@ function closeSharedMemory(handle) {
   sharedMemoryAddon.CloseSharedMemory(handle);
 }
 
+// messaging
+
+function stringToHwnd(strHwnd) {
+  const handle = Buffer.alloc(messagingAddon.sizeof_WindowHandle);
+
+  const res = messagingAddon.StringToHwnd(strHwnd, handle);
+
+  if (res > 0) {
+    throw `could not convert string ${strHwnd} to hwnd: ${res}`;
+  }
+
+  return handle;
+}
+
+function sendCopyDataMessageTimeout(
+  targetHwnd,
+  senderHwnd,
+  data,
+  encoding,
+  sendMessageFlags,
+  timeout
+) {
+  let buf = null;
+
+  if (isBuffer(data)) {
+    buf = data;
+  } else if (data && typeof data === "string") {
+    buf = Buffer.from(data, encoding || "utf8");
+  } else {
+    buf = Buffer.from(data);
+  }
+
+  const finalFlags =
+    sendMessageFlags ||
+    sendMessageTimeoutFlags.SMTO_NOTIMEOUTIFNOTHUNG |
+      sendMessageTimeoutFlags.SMTO_ERRORONEXIT;
+  const res = messagingAddon.SendCopyDataMessageTimeout(
+    targetHwnd,
+    senderHwnd,
+    buf,
+    buf.byteLength,
+    finalFlags,
+    timeout || 2000
+  );
+
+  if (res === 1) {
+    throw `could not send WM_COPYDATA message`;
+  }
+}
+
 module.exports = {
   createSharedMemory,
   openSharedMemory,
@@ -111,4 +171,8 @@ module.exports = {
     Write: 0x0002,
     AllAccess: 0xf001f,
   },
+
+  stringToHwnd,
+  sendCopyDataMessageTimeout,
+  sendMessageTimeoutFlags,
 };
