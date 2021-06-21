@@ -9,6 +9,29 @@ function isBuffer(value) {
   );
 }
 
+function strEncodeUTF16(str) {
+  var buf = new ArrayBuffer(str.length * 2);
+  var bufView = new Uint16Array(buf);
+  for (var i = 0, strLen = str.length; i < strLen; i++) {
+    bufView[i] = str.charCodeAt(i);
+  }
+  return bufView;
+}
+
+function bufferFromData(data, encoding) {
+  if (isBuffer(data)) {
+    return data;
+  } else if (data && typeof data === "string") {
+    if (encoding === "utf16") {
+      return strEncodeUTF16(data);
+    } else {
+      return Buffer.from(data, encoding || "utf8");
+    }
+  }
+
+  return Buffer.from(data);
+}
+
 const sendMessageTimeoutFlags = {
   SMTO_NORMAL: 0x00,
   SMTO_BLOCK: 0x01,
@@ -65,16 +88,7 @@ function openSharedMemory(name, fileMapAccess, memorySize) {
 }
 
 function writeSharedData(handle, data, encoding) {
-  let buf = null;
-
-  if (isBuffer(data)) {
-    buf = data;
-  } else if (data && typeof data === "string") {
-    buf = Buffer.from(data, encoding || "utf8");
-  } else {
-    buf = Buffer.from(data);
-  }
-
+  const buf = bufferFromData(data, encoding);
   const res = sharedMemoryAddon.WriteSharedData(handle, buf, buf.byteLength);
 
   if (res === 1) {
@@ -126,16 +140,7 @@ function sendCopyDataMessageTimeout(
   sendMessageFlags,
   timeout
 ) {
-  let buf = null;
-
-  if (isBuffer(data)) {
-    buf = data;
-  } else if (data && typeof data === "string") {
-    buf = Buffer.from(data, encoding || "utf8");
-  } else {
-    buf = Buffer.from(data);
-  }
-
+  const buf = bufferFromData(data, encoding);
   const finalFlags =
     sendMessageFlags ||
     sendMessageTimeoutFlags.SMTO_NOTIMEOUTIFNOTHUNG |
