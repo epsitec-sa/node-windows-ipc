@@ -116,7 +116,7 @@ describe("WriteSharedMemorySerial", function () {
 
 describe("SendCopyDataMessageTimeout", function () {
   it("should send a WM_COPYDATA message", function () {
-    const targetHandle = lib.stringToHwnd("0xF060A");
+    const targetHandle = lib.stringToHwnd("0x21892");
     const senderHandle = lib.stringToHwnd("0x0");
 
     assert.ok(targetHandle);
@@ -126,7 +126,7 @@ describe("SendCopyDataMessageTimeout", function () {
       targetHandle,
       senderHandle,
       "hello world",
-      "utf8",
+      "utf16",
       null,
       5000
     );
