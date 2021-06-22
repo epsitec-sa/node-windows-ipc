@@ -13,7 +13,7 @@
       "include_dirs": [
           "<!(node -e \"require('napi-macros')\")"
       ],
-      "sources": [ "./src/messaging.cpp" ],
+      "sources": [ "./src/messaging.cpp", "./src/wipc/Module.cpp", "./src/wipc/Window.cpp", "./src/wipc/WipcUtf8Listener.cpp" ],
       "libraries": [],
     }
   ]
