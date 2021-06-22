@@ -142,7 +142,6 @@ describe("CreateCopyDataListener", function () {
     assert.ok(res.dataListener);
     assert.notStrictEqual(res.listenerHwnd, "0x0");
 
-    //const res2 = lib.disposeCopyDataListener(res.dataListener);
-    //assert.ok(res2);
+    lib.disposeCopyDataListener(res.dataListener);
   });
 });

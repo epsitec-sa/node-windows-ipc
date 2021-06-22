@@ -12,7 +12,7 @@ struct WindowHandle
 
 struct CopyDataListener
 {
-  Epsitec::Wipc::WipcUtf8Listener listener;
+  Epsitec::Wipc::WipcUtf8Listener* listener;
 };
 
 // string strHwnd, WindowHandle* hwnd -> int
@@ -88,9 +88,9 @@ NAPI_METHOD(CreateCopyDataListener)
     return true;
   };
 
-	dataListener->listener = Epsitec::Wipc::WipcUtf8Listener(onMessage);
+	dataListener->listener = new Epsitec::Wipc::WipcUtf8Listener(onMessage);
 
-  result = (UINT32)dataListener->listener.Handle();
+  result = (UINT32)dataListener->listener->Handle();
 
   NAPI_RETURN_UINT32(result)
 }
