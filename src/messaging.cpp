@@ -3,10 +3,16 @@
 
 #include <windows.h>
 #include <string>
+#include "./wipc/WipcUtf8Listener.h"
 
 struct WindowHandle
 {
   HWND hwnd;
+};
+
+struct CopyDataListener
+{
+  Epsitec::Wipc::WipcUtf8Listener listener;
 };
 
 // string strHwnd, WindowHandle* hwnd -> int
@@ -23,6 +29,18 @@ NAPI_METHOD(StringToHwnd)
   hwnd->hwnd = (HWND)std::stoul(s, nullptr, 16);
 
   NAPI_RETURN_INT32(result)
+}
+
+// WindowHandle* hwnd -> uint32
+NAPI_METHOD(HwndToUint)
+{
+  unsigned int result = 0;
+  NAPI_ARGV(1)
+
+  NAPI_ARGV_BUFFER_CAST(struct WindowHandle *, hwnd, 0)
+
+  result = (UINT32)hwnd->hwnd;
+  NAPI_RETURN_UINT32(result)
 }
 
 // *WindowHandle targetHwnd, *WindowHandle senderHwnd, byte* data, int dataSize, int sendMessageTimeoutFlags, int timeout -> int
@@ -54,11 +72,57 @@ NAPI_METHOD(SendCopyDataMessageTimeout)
   NAPI_RETURN_INT32(result)
 }
 
+// *CopyDataListener dataListener -> uint
+NAPI_METHOD(CreateCopyDataListener)
+{
+  unsigned int result = 0;
+
+  NAPI_ARGV(1)
+
+  NAPI_ARGV_BUFFER_CAST(struct CopyDataListener *, dataListener, 0)
+
+  auto onMessage = [&](HWND sender, LPCWSTR message)
+  {
+
+
+    return true;
+  };
+
+	dataListener->listener = Epsitec::Wipc::WipcUtf8Listener(onMessage);
+
+  result = (UINT32)dataListener->listener.Handle();
+
+  NAPI_RETURN_UINT32(result)
+}
+
+// *CopyDataListener dataListener -> int
+NAPI_METHOD(DisposeCopyDataListener)
+{
+  int result = 0;
+
+  NAPI_ARGV(1)
+
+  NAPI_ARGV_BUFFER_CAST(struct CopyDataListener *, dataListener, 0)
+
+  delete dataListener->listener;
+
+  NAPI_RETURN_INT32(result)
+}
+
+
 NAPI_INIT()
 {
   NAPI_EXPORT_FUNCTION(StringToHwnd)
+  NAPI_EXPORT_FUNCTION(HwndToUint)
+
   NAPI_EXPORT_FUNCTION(SendCopyDataMessageTimeout)
+
+  NAPI_EXPORT_FUNCTION(CreateCopyDataListener)
+  NAPI_EXPORT_FUNCTION(DisposeCopyDataListener)
 
   NAPI_EXPORT_SIZEOF_STRUCT(WindowHandle)
   NAPI_EXPORT_ALIGNMENTOF(WindowHandle)
+
+  NAPI_EXPORT_SIZEOF_STRUCT(CopyDataListener)
+  NAPI_EXPORT_ALIGNMENTOF(CopyDataListener)
 }

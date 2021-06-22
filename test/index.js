@@ -132,3 +132,17 @@ describe("SendCopyDataMessageTimeout", function () {
     );
   });
 });
+
+describe("CreateCopyDataListener", function () {
+  it("should create a WM_COPYDATA listener", function () {
+    const res = lib.createCopyDataListener((msg) => {
+      console.log(`received msg: ${msg}`);
+    });
+
+    assert.ok(res.dataListener);
+    assert.notStrictEqual(res.listenerHwnd, "0x0");
+
+    //const res2 = lib.disposeCopyDataListener(res.dataListener);
+    //assert.ok(res2);
+  });
+});

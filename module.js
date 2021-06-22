@@ -132,6 +132,12 @@ function stringToHwnd(strHwnd) {
   return handle;
 }
 
+function hwndToString(hwnd) {
+  const hwndVal = messagingAddon.HwndToUint(hwnd);
+
+  return `0x${hwndVal.toString(16)}`;
+}
+
 function sendCopyDataMessageTimeout(
   targetHwnd,
   senderHwnd,
@@ -159,6 +165,29 @@ function sendCopyDataMessageTimeout(
   }
 }
 
+function createCopyDataListener(onMessage) {
+  const dataListener = Buffer.alloc(messagingAddon.sizeof_CopyDataListener);
+
+  const hwnd = messagingAddon.CreateCopyDataListener(dataListener);
+
+  if (hwnd === 0) {
+    throw `could not create WM_COPYDATA listener`;
+  }
+
+  return {
+    dataListener,
+    listenerHwnd: `0x${hwnd.toString(16)}`,
+  };
+}
+
+function disposeCopyDataListener(listener) {
+  const res = messagingAddon.DisposeCopyDataListener(listener);
+
+  if (res === 1) {
+    throw `could not dispose WM_COPYDATA listener`;
+  }
+}
+
 module.exports = {
   createSharedMemory,
   openSharedMemory,
@@ -178,6 +207,11 @@ module.exports = {
   },
 
   stringToHwnd,
+  hwndToString,
+
   sendCopyDataMessageTimeout,
   sendMessageTimeoutFlags,
+
+  createCopyDataListener,
+  disposeCopyDataListener,
 };
