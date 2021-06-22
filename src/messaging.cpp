@@ -2,7 +2,6 @@
 #include <napi-macros.h>
 
 #include <windows.h>
-#include <sddl.h>
 #include <string>
 
 struct WindowHandle
@@ -54,7 +53,6 @@ NAPI_METHOD(SendCopyDataMessageTimeout)
 
   NAPI_RETURN_INT32(result)
 }
-
 
 NAPI_INIT()
 {
