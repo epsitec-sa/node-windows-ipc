@@ -1,5 +1,4 @@
-#include <node_api.h>
-#include <napi-macros.h>
+#include <napi.h>
 
 #include <windows.h>
 #include <string>
@@ -16,46 +15,74 @@ struct CopyDataListener
 };
 
 // string strHwnd, WindowHandle* hwnd -> int
-NAPI_METHOD(StringToHwnd)
+Napi::Value StringToHwnd(const Napi::CallbackInfo& info) 
 {
-  int result = 0;
+  Napi::Env env = info.Env();
 
-  NAPI_ARGV(2)
+  if (info.Length() != 2) {
+    Napi::TypeError::New(env, "Wrong number of arguments")
+        .ThrowAsJavaScriptException();
+    return env.Null();
+  }
 
-  NAPI_ARGV_UTF8(strHwndA, 1000, 0)
-  NAPI_ARGV_BUFFER_CAST(struct WindowHandle *, hwnd, 1)
+  if (!info[0].IsString() || !info[1].IsBuffer()) {
+    Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
+    return env.Null();
+  }
 
-  std::string s(strHwndA);
+  std::string s = info[0].As<Napi::String>().Utf8Value();
+  struct WindowHandle * hwnd = (struct WindowHandle *)info[1].As<Napi::Buffer<uint8_t>>().Data();
+
   hwnd->hwnd = (HWND)std::stoul(s, nullptr, 16);
 
-  NAPI_RETURN_INT32(result)
+  return env.Null();
 }
 
 // WindowHandle* hwnd -> uint32
-NAPI_METHOD(HwndToUint)
+Napi::Value HwndToUint(const Napi::CallbackInfo& info) 
 {
-  unsigned int result = 0;
-  NAPI_ARGV(1)
+  Napi::Env env = info.Env();
 
-  NAPI_ARGV_BUFFER_CAST(struct WindowHandle *, hwnd, 0)
+  if (info.Length() != 1) {
+    Napi::TypeError::New(env, "Wrong number of arguments")
+        .ThrowAsJavaScriptException();
+    return env.Null();
+  }
 
-  result = (UINT32)hwnd->hwnd;
-  NAPI_RETURN_UINT32(result)
+  if (!info[0].IsBuffer()) {
+    Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
+    return env.Null();
+  }
+
+  struct WindowHandle * hwnd = (struct WindowHandle *)info[0].As<Napi::Buffer<uint8_t>>().Data();
+
+  return Napi::Number::New(env, (UINT32)hwnd->hwnd);
 }
 
 // *WindowHandle targetHwnd, *WindowHandle senderHwnd, byte* data, int dataSize, int sendMessageTimeoutFlags, int timeout -> int
-NAPI_METHOD(SendCopyDataMessageTimeout)
+Napi::Value SendCopyDataMessageTimeout(const Napi::CallbackInfo& info)
 {
   int result = 0;
+  Napi::Env env = info.Env();
 
-  NAPI_ARGV(6)
+  if (info.Length() != 6) {
+    Napi::TypeError::New(env, "Wrong number of arguments")
+        .ThrowAsJavaScriptException();
+    return env.Null();
+  }
 
-  NAPI_ARGV_BUFFER_CAST(struct WindowHandle *, targetHwnd, 0)
-  NAPI_ARGV_BUFFER_CAST(struct WindowHandle *, senderHwnd, 1)
-  NAPI_ARGV_BUFFER_CAST(char *, data, 2)
-  NAPI_ARGV_INT32(dataSize, 3)
-  NAPI_ARGV_INT32(sendMessageTimeoutFlags, 4)
-  NAPI_ARGV_INT32(timeout, 5)
+  if (!info[0].IsBuffer() || !info[1].IsBuffer() || !info[2].IsBuffer() ||
+      !info[3].IsNumber() || !info[4].IsNumber() || !info[5].IsNumber()) {
+    Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
+    return env.Null();
+  }
+
+  struct WindowHandle * targetHwnd = (struct WindowHandle *)info[0].As<Napi::Buffer<uint8_t>>().Data();
+  struct WindowHandle * senderHwnd = (struct WindowHandle *)info[1].As<Napi::Buffer<uint8_t>>().Data();
+  char * data = info[2].As<Napi::Buffer<char>>().Data();
+  int dataSize = info[3].As<Napi::Number>().Int32Value();
+  int sendMessageTimeoutFlags = info[4].As<Napi::Number>().Int32Value();
+  int timeout = info[5].As<Napi::Number>().Int32Value();
 
   COPYDATASTRUCT cds;
   cds.dwData = 0;
@@ -66,20 +93,30 @@ NAPI_METHOD(SendCopyDataMessageTimeout)
   if (res == 0)
   {
     result = 1;
-    NAPI_RETURN_INT32(result)
   }
 
-  NAPI_RETURN_INT32(result)
+  return Napi::Number::New(env, result);
 }
 
+
 // *CopyDataListener dataListener -> uint
-NAPI_METHOD(CreateCopyDataListener)
+Napi::Value CreateCopyDataListener(const Napi::CallbackInfo& info)
 {
   unsigned int result = 0;
+  Napi::Env env = info.Env();
 
-  NAPI_ARGV(1)
+  if (info.Length() != 2) {
+    Napi::TypeError::New(env, "Wrong number of arguments")
+        .ThrowAsJavaScriptException();
+    return env.Null();
+  }
 
-  NAPI_ARGV_BUFFER_CAST(struct CopyDataListener *, dataListener, 0)
+  if (!info[0].IsBuffer() || !info[1].IsFunction()) {
+    Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
+    return env.Null();
+  }
+
+  struct CopyDataListener * dataListener = (struct CopyDataListener *)info[0].As<Napi::Buffer<uint8_t>>().Data();
 
   auto onMessage = [&](HWND sender, LPCWSTR message)
   {
@@ -92,37 +129,47 @@ NAPI_METHOD(CreateCopyDataListener)
 
   result = (UINT32)dataListener->listener->Handle();
 
-  NAPI_RETURN_UINT32(result)
+  return Napi::Number::New(env, result);
 }
 
 // *CopyDataListener dataListener -> int
-NAPI_METHOD(DisposeCopyDataListener)
+Napi::Value DisposeCopyDataListener(const Napi::CallbackInfo& info)
 {
   int result = 0;
+  Napi::Env env = info.Env();
 
-  NAPI_ARGV(1)
+  if (info.Length() != 1) {
+    Napi::TypeError::New(env, "Wrong number of arguments")
+        .ThrowAsJavaScriptException();
+    return env.Null();
+  }
 
-  NAPI_ARGV_BUFFER_CAST(struct CopyDataListener *, dataListener, 0)
+  if (!info[0].IsBuffer()) {
+    Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
+    return env.Null();
+  }
+
+  struct CopyDataListener * dataListener = (struct CopyDataListener *)info[0].As<Napi::Buffer<uint8_t>>().Data();
 
   delete dataListener->listener;
 
-  NAPI_RETURN_INT32(result)
+  return Napi::Number::New(env, result);
 }
 
 
-NAPI_INIT()
-{
-  NAPI_EXPORT_FUNCTION(StringToHwnd)
-  NAPI_EXPORT_FUNCTION(HwndToUint)
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
+  exports.Set(Napi::String::New(env, "StringToHwnd"), Napi::Function::New(env, StringToHwnd));
+  exports.Set(Napi::String::New(env, "HwndToUint"), Napi::Function::New(env, HwndToUint));
 
-  NAPI_EXPORT_FUNCTION(SendCopyDataMessageTimeout)
+  exports.Set(Napi::String::New(env, "SendCopyDataMessageTimeout"), Napi::Function::New(env, SendCopyDataMessageTimeout));
 
-  NAPI_EXPORT_FUNCTION(CreateCopyDataListener)
-  NAPI_EXPORT_FUNCTION(DisposeCopyDataListener)
+  exports.Set(Napi::String::New(env, "CreateCopyDataListener"), Napi::Function::New(env, CreateCopyDataListener));
+  exports.Set(Napi::String::New(env, "DisposeCopyDataListener"), Napi::Function::New(env, DisposeCopyDataListener));
 
-  NAPI_EXPORT_SIZEOF_STRUCT(WindowHandle)
-  NAPI_EXPORT_ALIGNMENTOF(WindowHandle)
+  exports.Set(Napi::String::New(env, "sizeof_WindowHandle"), Napi::Number::New(env, sizeof(struct WindowHandle)));
+  exports.Set(Napi::String::New(env, "sizeof_CopyDataListener"), Napi::Number::New(env, sizeof(struct CopyDataListener)));
 
-  NAPI_EXPORT_SIZEOF_STRUCT(CopyDataListener)
-  NAPI_EXPORT_ALIGNMENTOF(CopyDataListener)
+  return exports;
 }
+
+NODE_API_MODULE(addon, Init)
