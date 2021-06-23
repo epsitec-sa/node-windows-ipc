@@ -148,10 +148,10 @@ describe("CreateCopyDataListener", function () {
   it("should create a WM_COPYDATA listener", function (done) {
     const senderHandle = lib.stringToHwnd("0x0");
     const msgToSend = "aiuéoäàà";
+    let rcvMsg = "";
 
     const res = lib.createCopyDataListener((msg) => {
-      console.log(`rcv msg: ${msg}`);
-      assert.strictEqual(msg, msgToSend);
+      rcvMsg = msg;
     });
 
     assert.ok(res.dataListener);
@@ -170,7 +170,12 @@ describe("CreateCopyDataListener", function () {
 
     setTimeout(() => {
       lib.disposeCopyDataListener(res.dataListener);
-      done();
+
+      done(
+        rcvMsg !== msgToSend
+          ? new Error(`Expected ${msgToSend}, received ${rcvMsg}`)
+          : null
+      );
     }, 1000);
   });
 });
