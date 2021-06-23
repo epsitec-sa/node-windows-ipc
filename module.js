@@ -1,5 +1,5 @@
 const sharedMemoryAddon = require("./build/Release/sharedMemory");
-const messagingAddon = require("./build/Release/messaging");
+const messagingAddon = require("bindings")("messaging.node");
 
 function isBuffer(value) {
   return (
