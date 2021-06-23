@@ -114,6 +114,17 @@ describe("WriteSharedMemorySerial", function () {
   });
 });
 
+describe("MarshalHwnd", function () {
+  it("should convert to a hwnd a string handle and reconvert again", function () {
+    const origHandle = "0x21892";
+
+    const hwnd = lib.stringToHwnd(origHandle);
+    const finalHandle = lib.hwndToString(hwnd);
+
+    assert.strictEqual(finalHandle, origHandle);
+  });
+});
+
 describe("SendCopyDataMessageTimeout", function () {
   it("should send a WM_COPYDATA message", function () {
     const targetHandle = lib.stringToHwnd("0x21892");
