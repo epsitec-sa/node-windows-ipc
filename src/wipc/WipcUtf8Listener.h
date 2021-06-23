@@ -15,7 +15,7 @@ namespace Epsitec
 		class WipcUtf8Listener : public Epsitec::Windows::Window
 		{
 		public:
-			typedef std::function<bool (HWND sender, LPCWSTR message)> Callback;
+			typedef std::function<bool (HWND sender, LPCSTR message)> Callback;
 
 		public:
 			WipcUtf8Listener(const Callback& onMessage);

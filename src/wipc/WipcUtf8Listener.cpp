@@ -25,9 +25,9 @@ namespace Epsitec
 					auto data = (COPYDATASTRUCT*)lParam;
 
 					// convert from UTF8 to Unicode
-					CA2W wMessage((LPCSTR)data->lpData, CP_UTF8);
+					//CA2W wMessage((LPCSTR)data->lpData, CP_UTF8);
 					
-					return this->onMessage(sender, wMessage);
+					return this->onMessage(sender, (LPCSTR)data->lpData);
 				}
 			}
 			return false;

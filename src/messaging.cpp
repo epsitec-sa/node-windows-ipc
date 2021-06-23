@@ -17,7 +17,7 @@ struct CopyDataListener
   Napi::ThreadSafeFunction tsfn;
 };
 
-void OnMessageCallback(Napi::Env env, Napi::Function jsCallback, char* message) 
+void OnMessageCallback(Napi::Env env, Napi::Function jsCallback, LPCSTR message) 
 {
   // Transform native data into JS data, passing it to the provided
   // `jsCallback` -- the TSFN's JavaScript function.
@@ -137,15 +137,15 @@ Napi::Value CreateCopyDataListener(const Napi::CallbackInfo& info)
     "OnMessage",             // Name
     0,                       // Unlimited queue
     1,                       // Only one thread will use this initially
-    []( Napi::Env ) {}        // Finalizer used to clean threads up
+    []( Napi::Env ) {}       // Finalizer used to clean threads up
   );
 
-  auto onMessage = [&, tsfn](HWND sender, LPCWSTR message)
+  auto onMessage = [&, tsfn](HWND sender, LPCSTR message)
   {
-    size_t w_len = wcslen(message);
-    char* char_str = new char[w_len + 1];
-    memset(char_str,'\0', w_len * sizeof(char));
-    WideCharToMultiByte(CP_ACP,WC_COMPOSITECHECK,message,-1,char_str,w_len,NULL,NULL);
+    size_t len = strlen(message);
+    char* char_str = new char[len + 1];
+    strncpy(char_str, message, len);
+    char_str[len] = '\0';
 
     napi_status status = tsfn.BlockingCall( char_str, OnMessageCallback );
 
