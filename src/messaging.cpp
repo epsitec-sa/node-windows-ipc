@@ -147,9 +147,7 @@ Napi::Value CreateCopyDataListener(const Napi::CallbackInfo& info)
     strncpy(char_str, message, len);
     char_str[len] = '\0';
 
-    napi_status status = tsfn.BlockingCall( char_str, OnMessageCallback );
-
-    return status == napi_ok;
+    return tsfn.BlockingCall( char_str, OnMessageCallback ) == napi_ok;
   };
 
   dataListener->tsfn = tsfn;
@@ -179,8 +177,9 @@ Napi::Value DisposeCopyDataListener(const Napi::CallbackInfo& info)
 
   struct CopyDataListener * dataListener = (struct CopyDataListener *)info[0].As<Napi::Buffer<uint8_t>>().Data();
 
-  dataListener->tsfn.Release();
+  dataListener->tsfn.Abort();
   delete dataListener->listener;
+  dataListener->tsfn.Release();
 
   return Napi::Number::New(env, result);
 }
