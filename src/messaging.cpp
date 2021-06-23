@@ -1,3 +1,5 @@
+#define NAPI_VERSION 4
+
 #include <napi.h>
 
 #include <windows.h>
@@ -12,7 +14,18 @@ struct WindowHandle
 struct CopyDataListener
 {
   Epsitec::Wipc::WipcUtf8Listener* listener;
+  Napi::ThreadSafeFunction tsfn;
 };
+
+void OnMessageCallback(Napi::Env env, Napi::Function jsCallback, char* message) 
+{
+  // Transform native data into JS data, passing it to the provided
+  // `jsCallback` -- the TSFN's JavaScript function.
+  jsCallback.Call( {Napi::String::New(env, message )} );
+
+  // We're finished with the data.
+  delete message;
+}
 
 // string strHwnd, WindowHandle* hwnd -> int
 Napi::Value StringToHwnd(const Napi::CallbackInfo& info) 
@@ -98,7 +111,6 @@ Napi::Value SendCopyDataMessageTimeout(const Napi::CallbackInfo& info)
   return Napi::Number::New(env, result);
 }
 
-
 // *CopyDataListener dataListener -> uint
 Napi::Value CreateCopyDataListener(const Napi::CallbackInfo& info)
 {
@@ -118,13 +130,29 @@ Napi::Value CreateCopyDataListener(const Napi::CallbackInfo& info)
 
   struct CopyDataListener * dataListener = (struct CopyDataListener *)info[0].As<Napi::Buffer<uint8_t>>().Data();
 
-  auto onMessage = [&](HWND sender, LPCWSTR message)
+  // Create a ThreadSafeFunction
+  auto tsfn = Napi::ThreadSafeFunction::New(
+    env,
+    info[1].As<Napi::Function>(),
+    "OnMessage",             // Name
+    0,                       // Unlimited queue
+    1,                       // Only one thread will use this initially
+    []( Napi::Env ) {}        // Finalizer used to clean threads up
+  );
+
+  auto onMessage = [&, tsfn](HWND sender, LPCWSTR message)
   {
+    size_t w_len = wcslen(message);
+    char* char_str = new char[w_len + 1];
+    memset(char_str,'\0', w_len * sizeof(char));
+    WideCharToMultiByte(CP_ACP,WC_COMPOSITECHECK,message,-1,char_str,w_len,NULL,NULL);
 
+    napi_status status = tsfn.BlockingCall( char_str, OnMessageCallback );
 
-    return true;
+    return status == napi_ok;
   };
 
+  dataListener->tsfn = tsfn;
 	dataListener->listener = new Epsitec::Wipc::WipcUtf8Listener(onMessage);
 
   result = (UINT32)dataListener->listener->Handle();
@@ -151,6 +179,7 @@ Napi::Value DisposeCopyDataListener(const Napi::CallbackInfo& info)
 
   struct CopyDataListener * dataListener = (struct CopyDataListener *)info[0].As<Napi::Buffer<uint8_t>>().Data();
 
+  dataListener->tsfn.Release();
   delete dataListener->listener;
 
   return Napi::Number::New(env, result);

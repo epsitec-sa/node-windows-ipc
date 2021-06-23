@@ -9,7 +9,7 @@
   "dependencies": {
     "bindings": "~1.2.1",
     "napi-macros": "^2.0.0",
-    "node-addon-api": "^1.0.0"
+    "node-addon-api": "^4.0.0"
   },
   "devDependencies": {
     "mocha": "^2.3.3",
@@ -21,12 +21,13 @@
     "build": "node-gyp build",
     "test": "mocha"
   },
+  "gypfile": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/epsitec-sa/node-windows-ipc.git"
   },
   "engines": {
-    "node": ">=8.4.0"
+    "node": ">=10.16.0"
   },
   "author": "Jonny Quarta",
   "license": "MIT",
