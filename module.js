@@ -168,7 +168,10 @@ function sendCopyDataMessageTimeout(
 function createCopyDataListener(onMessage) {
   const dataListener = Buffer.alloc(messagingAddon.sizeof_CopyDataListener);
 
-  const hwnd = messagingAddon.CreateCopyDataListener(dataListener);
+  const hwnd = messagingAddon.CreateCopyDataListener(
+    dataListener,
+    onMessage || function () {}
+  );
 
   if (hwnd === 0) {
     throw `could not create WM_COPYDATA listener`;

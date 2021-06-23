@@ -134,14 +134,32 @@ describe("SendCopyDataMessageTimeout", function () {
 });
 
 describe("CreateCopyDataListener", function () {
-  it("should create a WM_COPYDATA listener", function () {
+  it("should create a WM_COPYDATA listener", function (done) {
+    const senderHandle = lib.stringToHwnd("0x0");
+    const msgToSend = "aiuéoäàà";
+
     const res = lib.createCopyDataListener((msg) => {
-      console.log(`received msg: ${msg}`);
+      console.log(`rcv msg: ${msg}`);
+      assert.strictEqual(msg, msgToSend);
     });
 
     assert.ok(res.dataListener);
     assert.notStrictEqual(res.listenerHwnd, "0x0");
 
-    lib.disposeCopyDataListener(res.dataListener);
+    const targetHandle = lib.stringToHwnd(res.listenerHwnd);
+
+    lib.sendCopyDataMessageTimeout(
+      targetHandle,
+      senderHandle,
+      msgToSend,
+      "utf8",
+      null,
+      500
+    );
+
+    setTimeout(() => {
+      lib.disposeCopyDataListener(res.dataListener);
+      done();
+    }, 1000);
   });
 });
